@@ -2,7 +2,7 @@ data_dir = [Options.Paths.save2mat,'/ROI/Samples_aug'];
 load(fullfile(data_dir,'MSroi_aug.mat'))
 load(fullfile(data_dir,'mzroi_aug.mat'))
 mz_candidate = find(mzroi_aug >= input_parameters{13,"Options_value"} & mzroi_aug <= input_parameters{14,"Options_value"})';
-tic;
+Options.processing_time.convert2sparse_tensor.process.all = tic;
 %%
 sample_vec = 1:length(MSroi_aug);
 [Z,mod,uRt,Rt2] = deal(cell(max(sample_vec),1));
@@ -34,11 +34,47 @@ for k = sample_vec
     % Build sparse 3-way tensor
     Z{k} = sptensor([modCoord, rtCoord, ionSlice], val,[ max(cellfun(@max,mod(:))), max(cellfun(@max,uRt(:))),length(mzroi_aug)]);
 end
+
+
 [Options.coords.X,Options.coords.Y] = meshgrid([1:max(cellfun(@max,mod(:)))].*Options.modTime/60,[1:max(cellfun(@max,uRt(:)))].*median(diff(Rt_aug{k})));
 
-process_time.convert2sparse_tensor = toc;
+%% save BPC and TIC 
+if exist(fullfile(Options.Paths.save2mat,'BPC'),'dir')  ~= 7
+mkdir(fullfile(Options.Paths.save2mat,'BPC'))
+end
+if exist(fullfile(Options.Paths.save2mat,'TIC'),'dir')  ~= 7
+mkdir(fullfile(Options.Paths.save2mat,'TIC'))
+end
+
+for k = sample_vec
+    % BPC
+    [r, c, val] = find(MSroi_aug{k}(:,Options.firstRt(k):end));  % find nonzero entries
+     % Map column indices to mod and RT coordinates
+    modCoord = mod{k}(c);   % mod{k} is length numRt
+    rtCoord = uRt{k}(c);   % uRt{k} is length numRt
+    p = surf(Options.coords.X,Options.coords.Y,accumarray([modCoord, rtCoord], val,[ max(cellfun(@max,mod(:))), max(cellfun(@max,uRt(:)))],@max)','EdgeColor','interp','FaceColor','interp');
+    view([0 90])
+    xlabel('^1t_R (min)')
+    ylabel('^2t_R (s)')
+    title(['BPC: ',fileList(k).name(1:end-4)] ,'Interpreter', 'none')
+    axis tight
+    colorbar
+    saveas(p,fullfile(Options.Paths.save2mat,'BPC',[fileList(k).name(1:end-4),'.tif']))
+
+    % TIC
+    p = surf(Options.coords.X,Options.coords.Y,accumarray([modCoord, rtCoord], val,[ max(cellfun(@max,mod(:))), max(cellfun(@max,uRt(:)))],@sum)','EdgeColor','interp','FaceColor','interp');
+        view([0 90])
+    xlabel('^1t_R (min)')
+    ylabel('^2t_R (s)')
+    title(['TIC: ', fileList(k).name(1:end-4) ],'Interpreter', 'none')
+    axis tight
+    colorbar
+    saveas(p,fullfile(Options.Paths.save2mat,'TIC',[fileList(k).name(1:end-4),'.tif' ...
+        ]))
+end 
+
 %%
-tic
+Options.processing_time.convert2sparse_tensor.save = tic;
 Z_all = Z;
 if exist(fullfile(Options.Paths.save2mat,'SparseTensor'),'dir') ~= 7
     mkdir(fullfile(Options.Paths.save2mat,'SparseTensor'))
@@ -51,5 +87,7 @@ for k = sample_vec
 end 
 % save(fullfile(Options.Paths.save2mat,'Rts_2D.mat'))
 
-process_time.convert2sparse_tensor_save = toc;
+Options.processing_time.convert2sparse_tensor.save = toc(Options.processing_time.convert2sparse_tensor.save);
 clear MSroi_aug
+Options.processing_time.convert2sparse_tensor.process.all = ...
+    toc(Options.processing_time.convert2sparse_tensor.process.all);

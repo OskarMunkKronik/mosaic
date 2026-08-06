@@ -1,11 +1,12 @@
 %% Initialization
-tic;
+Options.processing_time.curve_resolution.process.all = tic;
 % mz_vec = full(unique([feature_groups_all.basePeak]));
 % 
 % d = full([feature_groups_all.basePeak; clusters_all_samples'; ...
 %     feature_groups_all.Rt; feature_groups_all.sample; ...
 %     feature_groups_all.volume_summed; feature_groups_all.volume_basePeak]');
 %% New initialize
+Options.processing_time.curve_resolution.process.organize_data = tic;
 mass_spectra_cell = {feature_groups_all.massSpec};
 
 % Remove zeros and map mz
@@ -21,6 +22,7 @@ Options.dir.results = Options.Paths.save2mat;
 mz_vec = full(unique(vertcat(mz_in_mass_spectra{:})));
 %% Main loop
 clc
+
 [mz_ind, peak_borders, Rt_cluster] = deal(cell(numel(mz_vec),1));
 grps = [];
 active = true(length(clusters_all_samples),1);
@@ -64,8 +66,9 @@ save(fullfile(Options.dir.results,'curve_resolution_final_meta_data_Ver2.mat'),"
 
 %% get_clusters_for_deconvolution
 get_clusters_for_deconvolution(matFile_list, x_range, y_range, mz_range, Options.Filter, num_clusters, n_samples, Options); % update so it takes the peak borders from MF
-
+Options.processing_time.curve_resolution.process.organize_data = toc(Options.processing_time.curve_resolution.process.organize_data);
 %% === NNMF / curve resolution ===
+Options.processing_time.curve_resolution.process.nmf = tic;
 q = progressParfor(num_clusters);
 clc
 
@@ -74,24 +77,32 @@ warning('off','all')
 run_cluster_chunks(Options, x_range, y_range, mz_range, ...
     Filter, num_clusters, n_samples, 1)
 warning('on','all')
+Options.processing_time.curve_resolution.process.nmf = toc;
 
 %% Build results structure
 clc
+Options.processing_time.curve_resolution.process.build_results_structure = tic;
 [feature_groups_all, clusters_all_samples] = build_results_curve_resolution(...
     [],[] , x_range, y_range, mz_range,[], peak_borders, mz_ind, mzroi_aug, ...
     matFile_list, n_samples,Options);
 feature_table = full([feature_groups_all.basePeak; clusters_all_samples; feature_groups_all.Rt;feature_groups_all.sample;feature_groups_all.volume_summed]');
+
+Options.processing_time.curve_resolution.process.build_results_structure = toc(Options.processing_time.curve_resolution.process.build_results_structure);
+
+%% save 
+Options.processing_time.curve_resolution.save_before_duplicate = tic;
 save(fullfile(Options.dir.results,'feature_table_before_duplicate_remove.mat'), "feature_table","-v7.3","-nocompression");
 save(fullfile(Options.dir.results,'feature_groups_all_before_duplicate_remove.mat'), "feature_groups_all","-v7.3","-nocompression");
-
+Options.processing_time.curve_resolution.save_before_duplicate = toc(Options.processing_time.curve_resolution.save_before_duplicate);
 %% Remove duplicates
 clc
+Options.processing_time.curve_resolution.process.remove_duplicates = tic;
 fprintf('Removing duplicates in processes...\n');
 [feature_table, feature_groups_all, clusters_all_samples,clusters_all_samples_before_duplicate_removal] = cleanup_clusters_feature_table(feature_groups_all,clusters_all_samples,feature_table, Options);
-process_time.curve_resolution = toc;
+Options.processing_time.curve_resolution.process.remove_duplicates = toc(Options.processing_time.curve_resolution.process.remove_duplicates);
 
 %% Save results
-tic
+Options.processing_time.curve_resolution.save_final = tic;
 fprintf(1,'Save results\n');
 % timestamp = datestr(now,'yymmdd_HHMMSS');
  save(fullfile(Options.dir.results, ...
@@ -100,5 +111,5 @@ fprintf(1,'Save results\n');
 
 % Clear temporary variables and finalize the process
 fprintf('Process completed successfully.\n');
-
-process_time.save_resultes = toc;
+Options.processing_time.curve_resolution.save_final = toc(Options.processing_time.curve_resolution.save_final);
+Options.processing_time.curve_resolution.process.all = toc(Options.processing_time.curve_resolution.process.all);

@@ -1,4 +1,5 @@
 % All pipeline
+clear Options
 meta_data_path = "C:\Users\mht541\Desktop\test_mosaic\pipeline\meta_data.xlsx";
 % meta_data_path = "F:\Nadine\meta_data"%thresh_morethan1mz.xlsx"
 %% Get all paths
@@ -15,8 +16,12 @@ S_OptionsStruct_ROI
 addpath(input_parameters{6,"Paths_dir"}{:})
 %% ROI
 fprintf(1,'ROI detection\n');
+
+for n_samples_speed_test = [1,5,10:20:78,78]
+    Options.processing_time.mosaic = tic;
 cd([Options.Paths.CDF])
 fileList                                          = dir(['*',Options.ROI.MS1_Suffix]);
+fileList = fileList(1:n_samples_speed_test);%randi([1,length(fileList)],n,1));
 S_Import_template_ROI
 
 %% Fold to tensor
@@ -35,3 +40,7 @@ S_pipeline_run_curve_resolution_all_samples
 fprintf(1,'Export files...\n');
 S_pipeline_export_feature_table_to_excell
 S_save_mass_spectra
+Options.processing_time.mosaic = toc(Options.processing_time.mosaic);
+save(fullfile(Options.Paths.save2mat,[ 'Options_nSamples_',num2str(n),'.mat']),"fileList","Options")
+plot_processing_times
+end 

@@ -1,5 +1,5 @@
 %% ================== SETUP ==================
-dataDir = 'D:\D4RUNOFF\Mosaic_300';%Options.Paths.save2mat;
+dataDir = Options.Paths.save2mat;
 load(fullfile(dataDir,'curve_resolution_final_meta_data_Ver2.mat'),'Options')
 load(fullfile(Options.Paths.save2mat,'feature_table_before_duplicate_remove.mat'))
 load(fullfile(Options.Paths.save2mat,'curve_resolution_final.mat'),'clusters_all_samples_before_duplicate_removal')
@@ -31,23 +31,15 @@ mass_spectra_cell = cellfun(@(spec,idx) spec(idx), ...
 len_spectra = cellfun(@numel, mz_in_mass_spectra);
 
 %% ================== TARGETS ==================
-
-ppm_dev = 200;
+ppm_dev = 200; % Set the ppm deviation to a user defined value corresponding to the mass accuracy of your mass spectrometer
 sample_names = {fileList.name}';
-% sample_names = cellfun(@(c) c(32:end-11), sample_names, 'UniformOutput', false);
 rt_offset = round(median(cellfun(@(rt) rt(1),Rt_aug))/60,3);
-sample_names = {'Standards BioOils',...
-'P#6',...
-'Feed 1',...
-'P#11',...
-'QC BTG all 20 ppm',...
-'KU1'}
-% sample_names = contains(sample_names,"20250916_Test_Aragorn~20250916-")
+
 %% ================== Search ==================
 
-compound_name = {'non'}
+compound_name = {'non'}; % Fill in for plotting 
 % Plot components with mzTarget in their Mass spectrum
-mzTarget =   462.0071
+mzTarget =   141.958 ; % Target m/z to search mass spectra for 
 figure(1)
 %figure
 search_plot_volume_elu_ms( ...
@@ -59,13 +51,11 @@ search_plot_volume_elu_ms( ...
 
 %% Plot specific components
 figure(2)
-componentTarget = 1023;
-
+componentTarget = 644; % The specific component desired to be plotted
 volume = plot_volume_elu_ms_component( ...
     num_clusters_before_curve_resolution,componentTarget, ...                         % <-- directly provided
     feature_table, rt_offset, Options, ...
     clusters_all_samples_before_duplicate_removal, ...
     mzroi_aug, load_dir, n_samples, ...
     sample_names, []);
-% set(gcf, 'Color', 'w')   % Set figure background to white
-% set(gca, 'Color', 'w')   % Set axes background to white
+

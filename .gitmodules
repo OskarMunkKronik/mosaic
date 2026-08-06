@@ -1,0 +1,6 @@
+[submodule "regionofinterest"]
+	path = regionofinterest
+	url = https://github.com/OskarMunkKronik/regionofinterest.git
+[submodule "tensor_toolbox"]
+	path = tensor_toolbox
+	url = https://gitlab.com/tensors/tensor_toolbox.git
