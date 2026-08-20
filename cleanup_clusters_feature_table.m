@@ -1,6 +1,6 @@
 function [feature_table, feature_groups_all, clusters_all_samples,clusters_all_samples_before_duplicate_removal] = cleanup_clusters_feature_table(feature_groups_all,clusters_all_samples,feature_table, Options)
 
-  
+    cos_thresh = 1-Options.Clustering.cutoff;
     % Assign same Rt to all with the same cluster: 
     feature_table_old = feature_table;
     Rt_median(:,1) = accumarray(feature_table(:,2),feature_table(:,3),[],@median);
@@ -13,7 +13,9 @@ function [feature_table, feature_groups_all, clusters_all_samples,clusters_all_s
     % Sort table by mz, RT, sample
     feature_table(:,1) =  mz_median ;
     feature_table(:,3:4) = Rt_median(:,:);
-    [feature_table, sort_idx] = sortrows(feature_table, [1,3,4], "ascend");
+    % [feature_table, sort_idx] = sortrows(feature_table, [1,3,4], "ascend");
+
+    [feature_table, sort_idx] = sortrows(feature_table, [3,4], "ascend");
     clusters_all_samples_before_duplicate_removal = clusters_all_samples(sort_idx);
     feature_table_old = feature_table_old(sort_idx,:);
     if ~isempty(feature_groups_all)
@@ -36,7 +38,18 @@ function [feature_table, feature_groups_all, clusters_all_samples,clusters_all_s
     % wU = [(1 + Options.ppm_dev*1e-6) * feature_table(m,1), Options.Rtdev];
     wU = [0, Options.Clustering.distance_componentization];
     for n = 2:N
-        if all(feature_table(n,1) - feature_table(m,1) == wU(1) & feature_table(n,3:4) - feature_table(m,3:4) <= wU(2:3)) % all(abs(feature_table(n,[1,3,4]) - feature_table(m,[1,3,4])) <= wU)
+          % --- Compute cosine similarity -
+        ref = full(feature_groups_all(n).massSpec);
+        cand = full(feature_groups_all(m).massSpec);
+        cosine_sim = dot(cand , ref) / (norm(cand) * norm(ref) + eps);
+
+        if all( feature_table(n,3:4) - feature_table(m,3:4) <= wU(2:3) & cosine_sim > cos_thresh)% all(abs(feature_table(n,[1,3,4]) - feature_table(m,[1,3,4])) <= wU)
+       % all(feature_table(n,1) - feature_table(m,1) == wU(1) & feature_table(n,3:4) - feature_table(m,3:4) <= wU(2:3) & cosine_sim > cos_thresh)
+            %    clf 
+        %     stem(ref,'Marker','none')
+        %     hold on
+        % stem(-cand,'Marker','none')
+
             continue
         end
         m = n;

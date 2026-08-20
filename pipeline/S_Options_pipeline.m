@@ -19,7 +19,7 @@ Options.ppm_dev =  input_parameters{3,"Options_value"};
 Options.Adducts =  [input_parameters{:,"Adducts_value"}]';%[	18.034374132,	22.98976928  ,38.96370648];
 Options.Adducts =  Options.Adducts(~isnan(Options.Adducts));%[	18.034374132,	22.98976928  ,38.96370648];
 Options.doPreFilter = input_parameters{21,"Options_value"} == 1;
-
+Options.doMFonRaw_data = input_parameters{22,"Options_value"} == 1;
 Options.mz.C13      =  input_parameters{4,"Options_value"};
 Options.mzHydrogen  =  input_parameters{5,"Options_value"};
 
@@ -45,7 +45,7 @@ F2_input = input_parameters{17:18,"Options_value"}';
 F1 = gausswin(F1_input(1),F1_input(2));
 F2 = gausswin(F2_input(1),F2_input(2));
 Options.Filter = F1*F2';
-Options.Filter = Options.Filter./sum(Options.Filter,'all');%mexican_hat_2d_aniso(3,1, 9, 3);%
+Options.Filter = Options.Filter./max(Options.Filter,[],'all');%mexican_hat_2d_aniso(3,1, 9, 3);%
 
 %% Curve resolution 
 algorithm = {'als','mult'};

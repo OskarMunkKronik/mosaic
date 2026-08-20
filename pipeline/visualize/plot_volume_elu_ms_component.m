@@ -65,7 +65,7 @@ for k = 1:numel(clusters)
         % 
         % ---- Convert to axis coordinates ----
         x_peak = X_coord{1}(1, r);
-        y_peak = Y_coord{1}(c, 2);
+        y_peak = Y_coord{1}(2);
         
         % ---- Add label ----
         text(x_peak, y_peak, max(Z(:)), num2str(n_cluster), ...

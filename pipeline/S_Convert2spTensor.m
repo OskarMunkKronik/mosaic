@@ -9,7 +9,7 @@ sample_vec = 1:length(MSroi_aug);
 for k = sample_vec
                 fprintf(1,'Folding sample: %i/%i\n',k,length(sample_vec))
 
-    Options.firstRt(k)      =   find(Rt_aug{k} >= Options.PhaseShift  ,1,'first');
+    Options.firstRt(k)      =   find(Rt_aug{k} >= Options.PhaseShift + Rt_aug{k}(1) ,1,'first');
 
     % Adjust the Rt vector
     Rt2{k} = Rt_aug{k}(Options.firstRt(k):end);

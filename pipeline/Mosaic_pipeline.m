@@ -1,9 +1,9 @@
 % All pipeline
-meta_data_path = "C:\Users\mht541\Desktop\test_mosaic\pipeline\meta_data.xlsx";
+meta_data_path = "N:\SCIENCE-PLEN-ECP_AnalytChem\People\Nadine\publication\meta_data.xlsx";
 % meta_data_path = "F:\Nadine\meta_data"%thresh_morethan1mz.xlsx"
 %% Get all paths
 fprintf(1,'Setup Mosaic\n');
-cd C:\Users\mht541\Desktop\test_mosaic
+cd D:\people\mht541\projects\mosaic\mosaic_published
 ProjectPBA
 
 %% run options file

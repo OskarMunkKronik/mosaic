@@ -10,10 +10,12 @@ ind = false(nFeatures,1);
 ppm_dev = Options.ppm_dev;
 vec_features = find(active);
 % ind = false(nFeatures,1);
-
+% ind = vec_features;
+%%
 ind(vec_features) = cellfun(@(mz_spec) ...
     any(any(abs(mz_spec - mzTarget) ./ mzTarget * 1e6 < ppm_dev, 2)), ...
     mass_spectrum(vec_features));
+%%
 % ind = cell2mat(cellfun(@(x) ...
 %     any(x == a,'all'), ...
 %     mass_spectrum,'UniformOutput',false))>0;
@@ -35,7 +37,8 @@ active(ind) = false;
 % ind_cluster = any(clusters_all_samples == grps',2);
 
 %%
-Rt_mat = cell2mat(arrayfun(@(x) x.Rt, feature_groups_all(r), 'UniformOutput', false));
+% Rt_mat = cell2mat(arrayfun(@(x) x.Rt, feature_groups_all(r), 'UniformOutput', false));
+Rt_mat = [feature_groups_all(r).Rt];
 [rt_mat_cluster_min,rt_mat_cluster_max,rt_mat_cluster] = deal(zeros([2,length(grps)]));
 for dim = 1:2
     rt_mat_cluster(dim,:) = accumarray(c,Rt_mat(dim,:),[],@median);

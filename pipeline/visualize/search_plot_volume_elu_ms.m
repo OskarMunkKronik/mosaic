@@ -53,20 +53,7 @@ for j = 1:nTargets
 
     colors = rand(max(group_idx),3);
 
-    %% ================== BAR PLOT ==================
-    subplot(1,2,1); hold on
-    
-    b = gobjects(max(group_idx),1);
-    
-    for k = 1:max(group_idx)
-        b(k) = bar(volume(:,k), 'FaceColor', colors(k,:));
-    end
-    
-    xticks(1:length(sample_names))
-    xticklabels(sample_names)
-    ylabel('Volume')
-    legend(b, string(clusters))
-
+ 
     %% ================== CHROMATOGRAM + SPECTRUM ==================
     clear mass_spec mz
     
@@ -91,7 +78,7 @@ for j = 1:nTargets
         % 
         % ---- Convert to axis coordinates ----
         x_peak = X_coord{1}(1, r);
-        y_peak = Y_coord{1}(c, 2);
+        y_peak = Y_coord{1}(c);
         
         % ---- Add label ----
         text(x_peak, y_peak, max(Z(:)), num2str(n_cluster), ...
@@ -113,8 +100,23 @@ for j = 1:nTargets
         
         xlabel('m/z')
         hold on
+
+        volume(:,k) =  squeeze(sum(Z_refolded{1},1:3));
+    end
+       %% ================== BAR PLOT ==================
+    subplot(1,2,1); hold on
+    
+    b = gobjects(max(group_idx),1);
+    
+    for k = 1:max(group_idx)
+        b(k) = bar(volume(:,k), 'FaceColor', colors(k,:));
     end
     
+    xticks(1:length(sample_names))
+    xticklabels(sample_names)
+    ylabel('Volume')
+    legend(b, string(clusters))
+
     %% ---- Axis formatting ----
     subplot(2,2,2)
     xt = xticks;

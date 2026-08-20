@@ -25,7 +25,7 @@ Options.processing_time.ROI.process.optimization = tic;
 Options.ROI.mzOptimization.nSamples = min(Options.ROI.mzOptimization.nSamples, length(fileList));
 [mzerror_Sample,nmz] = deal(zeros(length(Options.ROI.mzOptimization.MZmultiplyFactors),Options.ROI.mzOptimization.nSamples));
 
-for n = 1:Options.ROI.mzOptimization.nSamples
+parfor n = 1:Options.ROI.mzOptimization.nSamples
     fprintf(1,'Optimization sample: %i/%i\n',n,Options.ROI.mzOptimization.nSamples)
     k                                   =  Options.ROI.mzOptimization.SamplesForOptimization(n);
     [mzerror_Sample(:,n),~,nmz(:,n)]    =  OptParamRoi(fileList(k).name,Options.ROI.mzOptimization.mzerror,Options.ROI.mzOptimization.MZmultiplyFactors,Options.ROI.minroi,Options.ROI);
@@ -78,7 +78,7 @@ end
 for T = 1:Options.ROI.NumTrace
     fprintf(1,'Trace: %i/%i\n',T,Options.ROI.NumTrace)
 
-    for k = 1:length(fileList)
+    parfor k = 1:length(fileList)
         fprintf(1,'Sample: %i/%i\n',k,length(fileList))
 %         if T == 1
 %             cd(Options.Paths.CDF)

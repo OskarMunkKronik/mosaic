@@ -18,6 +18,7 @@ function points = build_points_all_samples(fileList,Options,mzroi_aug)
 
 i = 1;
 points = struct([]);
+
 for k = 1:length(fileList)
     %     k = sample_vec(k_count);
     %     load([fileList(k).folder,'\',fileList(k).name,'*','.mat'])
@@ -28,12 +29,17 @@ for k = 1:length(fileList)
         error('No matching file found for %s*.mat', fileList(k).name);
     end
 
+    sum_elution_profile = cellfun( ...
+    @(x) cellfun(@sparse, x, 'UniformOutput', false), ...
+    sum_elution_profile, ...
+    'UniformOutput', false);
+
     for n = 1:length(clusters)
         if allPeaks(n,6) > 0
             points(i).Rt                = allPeaks(n,[2,3])';
             points(i).elution1          = sum_elution_profile{n}{1};
             points(i).elution2          = sum_elution_profile{n}{2};
-            points(i).feature_elu_2D    = Z_feature(n);
+            % points(i).feature_elu_2D    = Z_feature(n);
             points(i).massSpec          = mass_spectra(:,clusters(n));
             points(i).volume_summed     = sum(allPeaks(clusters(n)==clusters,5));
             [points(i).volume_basePeak,a]                       = max(mass_spectra(:,clusters(n)));
