@@ -5,8 +5,8 @@ function [Results, cluster_curve_resolution] = build_results_curve_resolution( .
 fprintf('Building Results structure...\n');
 
 num_clusters = numel(mz_ind);
-load_dir_curve = fullfile(Options.dir.results, 'curve_resolution_results');
-load_dir_MF = fullfile(Options.dir.results, 'clusters_for_curve_resolution');
+load_dir_curve = fullfile(Options.Paths.save2mat, 'curve_resolution_results');
+% load_dir_MF = fullfile(Options.dir.results, 'clusters_for_curve_resolution');
 n_digits_clusters = ceil(log10(num_clusters ) + 1);
 
 % === Preallocate Results ===
@@ -65,7 +65,7 @@ for n_cluster =  1:num_clusters
     %     n_samples, n_cluster);
     %
     mz_vals_cluster = mzroi_aug(mz_ind{n_cluster});
-
+    len_mzroi =length(mzroi_aug);
     % === Loop over each subcomponent ===
     for n = n_vec(:)'  % ensures row vector
         cluster_mask = (cg == n);
@@ -76,38 +76,41 @@ for n_cluster =  1:num_clusters
         mass_spec = reshape(tmp, [], n_samples);
 
         % --- Base peak for each sample ---
-        [~, basepeak_idx] = max(mass_spec, [], 1);
+        % [~, basepeak_idx] = max(mass_spec, [], 1);
         basePeak_mz = mz_vals_cluster(cluster_mask);
+        % basePeak_mz = basePeak_mz(basepeak_idx);
+        [~,basepeak_idx] = max(sum(mass_spec,2));
         basePeak_mz = basePeak_mz(basepeak_idx);
         component_number =n + max_cluster;
+        BPC = squeeze(sum(Z_refolded(:,:,basepeak_idx,:),4));
         % save_curve_resolution_results(W,H(:,cluster_mask),n, X, Y, mz_ind_tmp, ...
         %     n_samples, component_number, num_clusters, ...
         %     Options,'component_cluster') % Save H an W as sparse matrices
-           save_curve_resolution_results([],[],n,Z_refolded(:,:,cluster_mask,:), X, Y, mz_ind_tmp, ...
-            n_samples, component_number, num_clusters, ...
-            Options,'component_cluster') % Save H an W as sparse matrices
+           save_curve_resolution_results([],[],n,Z_refolded(:,:,cluster_mask,:), X, Y, mz_ind_tmp,n_samples, component_number, num_clusters,Options,'component_cluster') % Save H an W as sparse matrices
         
         %%
         % --- Extract base peak chromatograms (vectorized-ish) ---
+        vol_tmp = squeeze(sum(Z_refolded(:,:,cluster_mask,:), 1:3));
+        [r, c] = find(BPC == max(BPC(:)), 1);
         for k = 1:n_samples % build feature table directly!  this is suboptimal make this vectorized and parrallel! 
-            bp_idx = basepeak_idx(k);
-            BPC = Z_refolded(:,:,bp_idx,k);
+            % bp_idx = basepeak_idx(k);
+            % BPC = Z_refolded(:,:,bp_idx,k);
             
             % if ~any(BPC(:)), continue; end
 
             % Max position
-            [r, c] = find(BPC == max(BPC(:)), 1);
+            
         
             % Fill Results
             Results(counter).Rt                          = [X(r); Y(c)];
             Results(counter).elution1                    = X;
             Results(counter).elution2                    = Y;
             % Results(counter).feature_elu_2D              = sptensor(BPC);
-            Results(counter).massSpec                    = sparse(zeros(length(mzroi_aug),1));
+            Results(counter).massSpec                    = sparse(len_mzroi,1);
             Results(counter).massSpec(mz_ind_tmp)        = mass_spec(:,k);
-            Results(counter).volume_summed               = sum(Z_refolded(:,:,cluster_mask,k), 'all');
+            Results(counter).volume_summed               = vol_tmp(k);%sum(Z_refolded(:,:,cluster_mask,k), 'all');
             % Results(counter).volume_basePeak             = sum(BPC(:));
-            Results(counter).basePeak                    = basePeak_mz(k);
+            Results(counter).basePeak                    = basePeak_mz;%basePeak_mz(k);
             % Results(counter).sample_name                 = matFile_list(k).name;
             Results(counter).sample                      = k;
             Results(counter).sample_feature_ID           = component_number;%counter;

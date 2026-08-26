@@ -62,7 +62,7 @@ for n = 1:n_clusters
 
     % Load data
     results = load(fullfile(load_dir, filename));
-
+  
     % -----------------------------------------
     % Generate X,Y meshgrid
     % -----------------------------------------

@@ -25,6 +25,7 @@ Options.mzHydrogen  =  input_parameters{5,"Options_value"};
 
 % Clean up
 Options.num_fragments = input_parameters{6,"Options_value"};
+Options.do_present_in_samples = input_parameters{23,"Options_value"};
 
 %Clustering
 Options.Clustering.cutoff =  1-input_parameters{7,"Options_value"};

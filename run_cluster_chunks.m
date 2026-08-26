@@ -1,4 +1,4 @@
-function run_cluster_chunks(Options, x_range, y_range, mz_range, ...
+function run_cluster_chunks(fileList,Options, x_range, y_range, mz_range, ...
     Filter, num_clusters, n_samples, chunk_size)
 
 
@@ -6,7 +6,7 @@ function run_cluster_chunks(Options, x_range, y_range, mz_range, ...
 n_digits_samples  = ceil(log10(n_samples ) + 1);
 n_digits_clusters = ceil(log10(num_clusters ) + 1);
 
-save_dir = fullfile(Options.dir.results, 'clusters_for_curve_resolution');
+save_dir = fullfile(Options.Paths.save2mat, 'clusters_for_curve_resolution');
 q = progressParfor(ceil(num_clusters/chunk_size));
 
 parfor n_cluster = 1:num_clusters
@@ -37,7 +37,7 @@ parfor n_cluster = 1:num_clusters
         % Valid sliced assignment
         Z_tmp(:, k) = Z_local;
     end
-
+    
     %% === PROCESS EACH CLUSTER (PARALLEL) ===
     % for idx = 1:numel(cluster_range)
     % n_cluster = cluster_range(idx);
@@ -49,14 +49,14 @@ parfor n_cluster = 1:num_clusters
     Z_data_local(:, 1)  = Z_tmp(:);
     Z_data_local(:, 2)  = num2cell(1:numel(Z_tmp))';
     Z_tmp_built = build_4D_cluster_cube(Z_data_local, n_cluster, n_samples);
+    ind_blank = contains(lower({fileList.name}),'blank');
+    blank_max = squeeze(max(Z_tmp_built(:,:,:,ind_blank),[],[1,2,4]));
+    blank_max(blank_max == 0) = 0.00001;
+    ind_rm_blank = squeeze(max(Z_tmp_built,[],[1,2,4]))./ blank_max < Options.blank_ratio;
+    % Z_tmp_built = Z_tmp_built;
+    Z_tmp_built(:,:,ind_rm_blank,:) = 0; 
     [W, H, cg, ~, ~] = perform_nnmf_unfold(Z_tmp_built, Options);
-    % save_curve_resolution_results( ...
-    %     W, H, cg, ...
-    %     x_range{n_cluster}, ...
-    %     y_range{n_cluster}, ...
-    %     mz_range{n_cluster}, ...
-    %     n_samples, n_cluster, num_clusters, ...
-    %     Options, 'curve_resolution_results');
+    
     save_curve_resolution_results( ...
             [], [], cg,Z_tmp_built,...
             x_range{n_cluster}, ...

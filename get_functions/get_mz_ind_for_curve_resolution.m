@@ -27,13 +27,14 @@ ind(vec_features) = cellfun(@(mz_spec) ...
 if ~any(ind)
     return
 end 
-active(ind) = false;
+
 % [~, max_group] = max(gc);
 
 % choose_cluster = grps;
 
 % Get all samples in that cluster
 [r,c] = find(clusters_all_samples == grps');
+active(r) = false;
 % ind_cluster = any(clusters_all_samples == grps',2);
 
 %%

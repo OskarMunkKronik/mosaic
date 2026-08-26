@@ -23,7 +23,7 @@ function save_curve_resolution_results(W,H,cg,Z_refolded, x_range, y_range, mz_r
     
     % === Setup ===
     n_digits_clusters = ceil(log10(num_clusters ) + 1);
-    save_dir = fullfile(Options.dir.results, suffix);
+    save_dir = fullfile(Options.Paths.save2mat, suffix);
    
 
     % Zero-padded cluster folder name
@@ -38,11 +38,10 @@ function save_curve_resolution_results(W,H,cg,Z_refolded, x_range, y_range, mz_r
     % Output filename (zero-padded and structured)
     filename = sprintf("results_%s.mat", cluster_str);
 
-
     % === Save ==
     save(fullfile(save_dir, filename), ...
          "W","H","cg", "x_range", "y_range", "mz_range", ...
-         "n_samples", "n_cluster","Z_refolded");
+         "n_samples", "n_cluster","Z_refolded",'-nocompression');
 
     % fprintf('✅ Saved cluster %s results to: %s\n', cluster_str, save_dir_cluster);
 end

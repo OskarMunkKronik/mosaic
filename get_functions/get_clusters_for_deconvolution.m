@@ -17,7 +17,7 @@ fprintf('\n=== Extracting clusters for deconvolution ===\n');
 
 q = progressParfor(n_samples);
 
-save_dir = fullfile(Options.dir.results, 'clusters_for_curve_resolution');
+save_dir = fullfile(Options.Paths.save2mat, 'clusters_for_curve_resolution');
 f = dir(save_dir);
 for n = 1:length(f)
 delete(fullfile(f(n).folder,f(n).name));

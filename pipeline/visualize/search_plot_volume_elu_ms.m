@@ -81,11 +81,13 @@ for j = 1:nTargets
         y_peak = Y_coord{1}(c);
         
         % ---- Add label ----
+        if  max(Z(:))> 0 
         text(x_peak, y_peak, max(Z(:)), num2str(n_cluster), ...
             'Color', colors(k,:), ...
             'FontWeight','bold', ...
             'HorizontalAlignment','center', ...
             'VerticalAlignment','bottom')
+        end 
 
         %% ---- Spectrum ----
         subplot(2,2,4)
