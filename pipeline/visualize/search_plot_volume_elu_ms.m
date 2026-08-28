@@ -33,10 +33,11 @@ end
 for j = 1:nTargets
     
     vec = find(matches(:,j));
+
     if isempty(vec)
         continue
     end
-    
+    vec = find(any(feature_table(:,2) == feature_table(vec,2)',2));
     clf
     
     %% ---- Grouping ----
@@ -95,9 +96,9 @@ for j = 1:nTargets
         
         stem(mz{n_cluster}, y_spec, ...
             'Marker','none','Color',colors(k,:))
-        
-        text(mz{n_cluster}, y_spec, ...
-            num2str(mz{n_cluster}), ...
+        ind = y_spec>0.01*max(y_spec);
+        text(mz{n_cluster}(ind), y_spec(ind), ...
+            num2str(mz{n_cluster}(ind)), ...
             'Rotation',45,'Color',colors(k,:))
         
         xlabel('m/z')

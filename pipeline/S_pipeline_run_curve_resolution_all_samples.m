@@ -126,15 +126,12 @@ Options.processing_time.curve_resolution.process.remove_duplicates = toc(Options
 %% Save results
 Options.processing_time.curve_resolution.save_final = tic;
 fprintf(1,'Save results\n');
-save_MF_results_parts(clusters_all_samples,feature_groups_all, fullfile(Options.Paths.save2mat,'NMF_final_dup_rm'),'NMF_final_part',10)
+save_MF_results_parts(clusters_all_samples,feature_groups_all, fullfile(Options.Paths.save2mat,'NMF_final'),'NMF_final_part',10)
 
 % timestamp = datestr(now,'yymmdd_HHMMSS');
  % save(fullfile(Options.dir.results, ...
  %    'curve_resolution_final.mat'),...
  %     "clusters_all_samples","clusters_all_samples_before_duplicate_removal", "feature_groups_all","feature_table","-v7.3","-nocompression");
-save(fullfile(Options.Paths.save2mat, ...
-    'curve_resolution_final.mat'),...
-     "clusters_all_samples","clusters_all_samples_before_duplicate_removal","feature_table","Options","-v7.3","-nocompression");
 
 % Clear temporary variables and finalize the process
 fprintf('Process completed successfully.\n');

@@ -195,7 +195,7 @@ function [feature_table, feature_groups_all, clusters_all_samples,clusters_all_s
     % PROCESS clusters without deleting inside the loop
     % -------------------------------------------------------------
     max_clust = max(clusters);
-  
+    n_digits_clusters = ceil(log10(max(feature_table(:,2) ))+ 1);
     q = progressParfor(max_clust);
 
     for n_cluster = 1:max_clust
@@ -225,6 +225,16 @@ function [feature_table, feature_groups_all, clusters_all_samples,clusters_all_s
              sum_components_all_samples = accumarray(u_ind, feature_table(idx_cluster,6));
              [~,a]  = max(sum_components_all_samples(idx));
              a = idx(a);
+             % feature_table(feature_table(:,2) == grps(a),6) = max(feature_table(idx_cluster,6),[],2);
+            %    % Zero-padded cluster index
+            %  cluster_str = sprintf(['%0', num2str(n_digits_clusters), 'd'], grps(a));
+            % 
+            % % Filename: results_XXX.mat
+            % filename = sprintf("results_%s.mat", cluster_str);
+            % 
+            % % Load data
+            % results = load(fullfile(Options.Paths.save2mat,'component_cluster', filename));
+
         end 
         not_max = any(grps(~ismember(grps,grps(a)))' == feature_table(:,2),2);
         
