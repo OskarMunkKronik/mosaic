@@ -42,9 +42,7 @@ rt_offset = round(median(cellfun(@(rt) rt(1),Rt_aug))/60,3);
 
 compound_name = {'non'}; % Fill in for plotting 
 % Plot components with mzTarget in their Mass spectrum
-mzTarget = 95.0105
-
-
+mzTarget = 235
 
 
 
@@ -63,7 +61,7 @@ search_plot_volume_elu_ms( ...
 %% Plot specific components
 figure(3)
 42
-componentTarget = 10496
+componentTarget = 28611
 
 
 % The specific component desired to be plotted

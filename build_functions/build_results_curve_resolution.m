@@ -4,7 +4,7 @@ function [Results, cluster_curve_resolution] = build_results_curve_resolution( .
 
 fprintf('Building Results structure...\n');
 
-num_clusters = numel(mz_ind);
+num_clusters = numel(mz_range);
 load_dir_curve = fullfile(Options.Paths.save2mat, 'curve_resolution_results');
 % load_dir_MF = fullfile(Options.dir.results, 'clusters_for_curve_resolution');
 n_digits_clusters = ceil(log10(num_clusters ) + 1);
@@ -64,7 +64,7 @@ for n_cluster =  1:num_clusters
     %     x_range{n_cluster}, y_range{n_cluster}, mz_range{n_cluster}, ...
     %     n_samples, n_cluster);
     %
-    mz_vals_cluster = mzroi_aug(mz_ind{n_cluster});
+    mz_vals_cluster = mzroi_aug(mz_range{n_cluster});
     len_mzroi =length(mzroi_aug);
     % === Loop over each subcomponent ===
     for n = n_vec(:)'  % ensures row vector
@@ -72,7 +72,7 @@ for n_cluster =  1:num_clusters
 
         % Collapse x,y dims once — vectorized
         tmp = squeeze(sum(Z_refolded(:,:,cluster_mask,:), [1 2]));  % (mz × sample)
-        mz_ind_tmp = (mz_ind{n_cluster}(cluster_mask)) ;
+        mz_ind_tmp = (mz_range{n_cluster}(cluster_mask)) ;
         mass_spec = reshape(tmp, [], n_samples);
 
         % --- Base peak for each sample ---
