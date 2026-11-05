@@ -15,7 +15,7 @@ function saveMSP(filename_out, feature_groups_all, mzroi_aug, feature_table, num
 [~,ia] = unique(f_sort(:,2));
 
 mass_spectra_cell = {feature_groups_all(idx(ia)).massSpec};
-
+[Rt] = [feature_groups_all(idx(ia)).Rt]';
 % Remove zero-intensity entries and map to mz axis
 valid_idx = cellfun(@(s) s > 0, mass_spectra_cell, 'UniformOutput', false);
 mz_in_mass_spectra = cellfun(@(mz, idx) mz(idx), ...
@@ -62,8 +62,8 @@ for i_count = 1:n_features
     end
 
     % RT indices
-    rt1 = feature_table(i, 3);
-    rt2 = feature_table(i, 4);
+    rt1 = Rt(i,1);%feature_table(i, 3);
+    rt2 = Rt(i,2);%feature_table(i, 4);
 
     scan_id = (rt1 - 1) * rt2_dim + rt2;
 
@@ -71,7 +71,7 @@ for i_count = 1:n_features
     [~, base_idx] = max(int_vals);
     precursor_mz  = mz_vals(base_idx);
 
-    rt_sec = rt1_time(rt1) * 60;   % convert RT1 from minutes to seconds
+    rt_sec = rt1_time(rt1) * 60 +rt2_time(rt2);   % convert RT1 from minutes to seconds
 
     % ------------------------------------------------------------------
     % MSP block — MZmine 3 recognises these field names:
@@ -80,16 +80,17 @@ for i_count = 1:n_features
     % The peak list follows immediately after "Num Peaks:" with one
     % "mz\tintensity" pair per line.  A blank line ends the record.
     % ------------------------------------------------------------------
-    fprintf(fid, 'Name: row%d_mz%.4f_rt%.2f\n',   i, precursor_mz, rt_sec);
+    fprintf(fid, 'Name: row%d_mz%.4f_rt%.2f\n',    i, precursor_mz, rt_sec);
     fprintf(fid, 'PrecursorMZ: %.4f\n',            precursor_mz);
     fprintf(fid, 'RT: %.4f\n',                     rt_sec);          % seconds
+    fprintf(fid, 'RT1: %.4f\n',                     rt1_time(rt1)*60);          % seconds
     fprintf(fid, 'RT2: %.4f\n',                    rt2_time(rt2));
     fprintf(fid, 'ADDUCT: [M+]+\n');
     fprintf(fid, 'MSLEVEL: 2\n');
     fprintf(fid, 'IONMODE: Positive\n');
     fprintf(fid, 'CHARGE: 1\n');
     fprintf(fid, 'SCANS: %d\n',                    scan_id);
-    fprintf(fid, 'FEATURE_ID: %d\n',               i);
+    fprintf(fid, 'FEATURE_ID: %d\n',               feature_table(i, 2));
     fprintf(fid, 'FEATURE_MS1_HEIGHT: %d\n',       feature_table(i, 6));
     fprintf(fid, 'MERGED_ACROSS_N_SAMPLES: %d\n',  n_samples);
     fprintf(fid, 'SPECTYPE: CORRELATED_MS\n');

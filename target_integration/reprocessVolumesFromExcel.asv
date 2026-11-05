@@ -1,0 +1,138 @@
+function volume_manual = reprocessVolumesFromExcel(Options, matFile_list, tol, kList, opts)
+%REPROCESSVOLUMESFROMEXCEL  Recompute volume_manual from edited RT borders.
+%
+%   volume_manual = reprocessVolumesFromExcel(Options, matFile_list, tol)
+%
+%   Reads <save2mat>/target_compounds/rt_borders/<sample>.xlsx (written by
+%   extractTargetVolumes), integrates each compound inside
+%   [RT1_min RT1_max] x [RT2_min RT2_max] (inclusive, in the units of
+%   Options.coords.X / .Y) at mzTarget +/- tol(j), and returns
+%   volume_manual [nTargets x nSamples].
+%
+%   Also writes a combined workbook for all samples in kList:
+%   <save2mat>/target_compounds/all_samples_rt_borders.xlsx
+%     'targets' : long table (Sample + per-compound columns)
+%     'volumes' : compounds x samples matrix
+%
+%   Name-value options
+%     VolumeManual  ([])    existing matrix to update (only columns in kList change)
+%     WriteBack     (true)  write new RT1_apex, RT2_apex and Volume back to the per-sample
+%                           Excel files and refresh the combined workbook
+%     MakePlots     (true)  save chromatograms of the edited windows as
+%                           <sample>_reprocessed.tiff (same layout as extractTargetVolumes)
+%     SaveFig       (false) also save .fig
+
+arguments
+    Options (1,1) struct
+    matFile_list
+    tol (:,1) double
+    kList (1,:) double = 1:numel(matFile_list)
+    opts.VolumeManual double = []
+    opts.WriteBack (1,1) logical = true
+    opts.MakePlots (1,1) logical = true
+    opts.SaveFig (1,1) logical = false
+end
+
+root     = fullfile(Options.Paths.save2mat, 'target_compounds');
+dirXls   = fullfile(root, 'rt_borders');
+dirChrom = fullfile(root, 'chromatograms');
+if opts.MakePlots && ~exist(dirChrom, 'dir'), mkdir(dirChrom); end
+volume_manual = opts.VolumeManual;
+allT = {};
+
+for k = kList
+    xlsPath = fullfile(dirXls, [matFile_list(k).name, '.xlsx']);
+    T = readtable(xlsPath, 'Sheet', 'targets');
+    nTargets = height(T);
+    if isempty(volume_manual)
+        volume_manual = nan(nTargets, numel(matFile_list));
+    end
+
+    d = load(fullfile(Options.Paths.save2mat, 'SparseTensor', ...
+        [matFile_list(k).name(1:end-4), '.mat']), 'Z', 'mzroi_aug', 'Options');
+    rt_1 = d.Options.coords.X(1, :);
+    rt_2 = d.Options.coords.Y(:, 1).';
+    mz   = d.mzroi_aug(:);
+
+    vol  = nan(nTargets, 1);
+    apex = nan(nTargets, 2);
+
+    if opts.MakePlots
+        nr = ceil(sqrt(nTargets));
+        nc = ceil(nTargets / nr);
+        fig = figure('Visible', 'off', 'Units', 'normalized', 'Position', [0 0 1 1]);
+        tl  = tiledlayout(fig, nr, nc, 'TileSpacing', 'compact', 'Padding', 'compact');
+        title(tl, [matFile_list(k).name(1:end-4), ' (reprocessed)'], 'Interpreter', 'none');
+    end
+
+    for j = 1:nTargets
+        i1 = find(rt_1 >= T.RT1_min(j) & rt_1 <= T.RT1_max(j));
+        i2 = find(rt_2 >= T.RT2_min(j) & rt_2 <= T.RT2_max(j));
+        im = find(abs(mz - T.mzTarget(j)) < tol(j));
+
+        if opts.MakePlots
+            ax = nexttile(tl);
+        end
+        if isempty(i1) || isempty(i2) || isempty(im)
+            if opts.MakePlots, title(ax, string(T.Compound(j)) + " (no data)", 'Interpreter', 'none'); end
+            continue
+        end
+
+        rt1w = rt_1(i1);
+        rt2w = rt_2(i2);
+        Zs = sum(double(d.Z(i1, i2, im)), 3);
+        vol(j) = sum(Zs, 'all');
+
+        [pk, lin] = max(Zs(:));
+        if pk > 0
+            [r, c] = ind2sub(size(Zs), lin);
+            apex(j, :) = [rt1w(r), rt2w(c)];
+        end
+
+        if opts.MakePlots && numel(rt1w) > 1 && numel(rt2w) > 1
+            surf(ax, rt1w, rt2w, Zs.', 'FaceColor', 'interp', 'EdgeColor', 'none');
+            view(ax, [0 90]); axis(ax, 'tight'); hold(ax, 'on');
+            if pk > 0
+                scatter3(ax, apex(j,1), apex(j,2), pk, 'red', 'filled');
+            end
+            xlabel(ax, '^1t_R (min)'); ylabel(ax, '^2t_R (s)');
+            title(ax, string(T.Compound(j)), 'Interpreter', 'none');
+        end
+    end
+    volume_manual(1:nTargets, k) = vol;
+
+    T.RT1_apex = apex(:, 1);
+    T.RT2_apex = apex(:, 2);
+    T.Volume   = vol;
+    if opts.WriteBack
+        writetable(T, xlsPath, 'Sheet', 'targets');
+    end
+    allT{end+1} = addvars(T, repmat(string(matFile_list(k).name), nTargets, 1), ...
+        'Before', 1, 'NewVariableNames', 'Sample'); %#ok<AGROW>
+
+    if opts.MakePlots
+        base = fullfile(dirChrom, [matFile_list(k).name, '_reprocessed']);
+        exportgraphics(fig, [base, '.tiff'], 'Resolution', 150);
+        if opts.SaveFig, savefig(fig, [base, '.fig']); end
+        close(fig);
+    end
+end
+
+% Combined workbook for all samples in kList
+if opts.WriteBack
+    writeSummary(allT, volume_manual, kList, {matFile_list(kList).name}, ...
+        fullfile(root, 'all_samples_rt_borders_repr.xlsx'));
+end
+end
+
+function writeSummary(allT, volume_manual, kList, sampleNames, xlsPath)
+if isempty(allT), return, end
+Tall = vertcat(allT{:});
+n = height(allT{1});
+names = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(string(sampleNames)));
+Tvol = [table(allT{1}.Compound, 'VariableNames', {'Compound'}), ...
+        array2table(volume_manual(1:n, kList), 'VariableNames', cellstr(names))];
+if exist(xlsPath, 'file'), delete(xlsPath); end
+writetable(Tall, xlsPath, 'Sheet', 'targets');
+writetable(Tvol, xlsPath, 'Sheet', 'volumes');
+end

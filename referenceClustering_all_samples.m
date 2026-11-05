@@ -24,7 +24,10 @@ i_vec = 1:n; % simpler & safer
 
 % --- Precompute ---
 elution_profile = cell(2,1);
+fprintf(1,'Align 1D\n');
 [elution_profile{1}, ~, ~] = align_elution_profiles_all([points.elution1]);
+
+fprintf(1,'Align 2D\n');
 [elution_profile{2}, ~, ~] = align_elution_profiles_all([points.elution2]);
 
 MS_norm = vecnorm([points.massSpec], 2, 1);

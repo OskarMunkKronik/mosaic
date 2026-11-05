@@ -9,7 +9,9 @@ ROI_all_time = tic;
 %% Get list of CDF files that needs to be subjected to ROI 
 cd([Options.Paths.CDF])
 % fileList                                          = dir(['*',Options.ROI.MS1_Suffix]);
-Options.ROI.mzOptimization.SamplesForOptimization = randi([1,length(fileList)],Options.ROI.mzOptimization.nSamples,1);
+not_blank = find(~contains(lower({fileList.name})','blank'));
+Options.ROI.mzOptimization.SamplesForOptimization = not_blank(randi([1, length(not_blank)],Options.ROI.mzOptimization.nSamples,1));
+
 if exist(fullfile(Options.Paths.save2mat,'ROI'),'dir') ~= 7
     mkdir(fullfile(Options.Paths.save2mat,'ROI'))
 end 
@@ -23,7 +25,8 @@ Options.processing_time.ROI.process.optimization = tic;
 % load(fullfile(Options.Paths.save2mat,'ROI','fileList_Samples.mat'))
 
 Options.ROI.mzOptimization.nSamples = min(Options.ROI.mzOptimization.nSamples, length(fileList));
-[mzerror_Sample,nmz] = deal(zeros(length(Options.ROI.mzOptimization.MZmultiplyFactors),Options.ROI.mzOptimization.nSamples));
+if Options.ROI.mzOptimization.MZmultiplyFactors>1
+[mzerror_Sample,nmz] = deal(zeros(Options.ROI.mzOptimization.MZmultiplyFactors(2),Options.ROI.mzOptimization.nSamples));
 
 parfor n = 1:Options.ROI.mzOptimization.nSamples
     fprintf(1,'Optimization sample: %i/%i\n',n,Options.ROI.mzOptimization.nSamples)
@@ -52,14 +55,12 @@ xlabel('\delta_m_/_z','FontAngle','italic')
 ylabel('Number of m/z traces / ROIs')
 
 saveas(p,[Options.Paths.save2mat,'/ROI_mz_optim.tif'])
-
+end
 
 %% ROI processing 
 close all
 Options.processing_time.ROI.process.sample_wise = tic;
 
-% cd C:\Users\mht541\Documents\MATLAB
-% parpool(8)
 % [mzroi,MSroi,Rt,Dt,trace] = deal(cell(length(fileList),Options.ROI.NumTrace));
 NbrePts          = length(fileList)*Options.ROI.NumTrace;
 
@@ -136,7 +137,8 @@ save([Options.Paths.save2mat, '/ROI/Samples_aug/MSroi_aug.mat'], ...
 
 Options.processing_time.ROI.save = toc(Options.processing_time.ROI.save);
 Options.processing_time.ROI.process.all = toc(ROI_all_time);
-clear ROI_all_time
+clear ROI_all_time mzroi MSroi
+% clear 
 
 
 %% functions 
@@ -186,7 +188,7 @@ function processROI(k, T, fileList, fileList_MS2, Options, hWaitbarMsgQueue)
     outName = [fileList(k).name(1:end-4), '_MSroi.mat'];
 
     %% Save results
-    save(fullfile(saveDir, outName), 'mzroi', 'MSroi', 'Rt', 'trace', 'Options');
+    save(fullfile(saveDir, outName), 'mzroi', 'MSroi', 'Rt', 'trace', 'Options','-v7.3');
 
 end
 % %% Load Options file 

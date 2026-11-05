@@ -34,18 +34,26 @@ function [elu, rt_mov, I0] = align_elution_profiles_all(elution_profile)
 
     % Preallocate output
     elu = zeros(L, D, 'like', P);
-
+    q = progressParfor(D);
     % Column-wise assignment (memory efficient)
-    for c = 1:D
-        shift = rt_mov(c);
+    parfor c = 1:D
+    % if mod(c, max(1, round(0.05 * D))) == 0 || c == 1 || c == D
+           send(q, c);
+    % end
+    
+    shift = rt_mov(c);
 
-        src_start = max(1, 1 - shift);
-        src_end   = min(n0, L - shift);
+    col = zeros(L, 1, 'like', P);
 
-        dst_start = src_start + shift;
-        dst_end   = src_end + shift;
+    src_start = max(1, 1 - shift);
+    src_end   = min(n0, L - shift);
 
-        elu(dst_start:dst_end, c) = P(src_start:src_end, c);
+    dst_start = src_start + shift;
+    dst_end   = src_end + shift;
+
+    col(dst_start:dst_end) = P(src_start:src_end, c);
+
+    elu(:, c) = col;
     end
 
     % Remove empty rows

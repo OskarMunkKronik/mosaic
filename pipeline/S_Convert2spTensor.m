@@ -1,6 +1,6 @@
 data_dir = [Options.Paths.save2mat,'/ROI/Samples_aug'];
-load(fullfile(data_dir,'MSroi_aug.mat'))
-load(fullfile(data_dir,'mzroi_aug.mat'))
+load(fullfile(data_dir,'MSroi_aug.mat'),'MSroi_aug')
+load(fullfile(data_dir,'mzroi_aug.mat'),'mzroi_aug')
 mz_candidate = find(mzroi_aug >= input_parameters{13,"Options_value"} & mzroi_aug <= input_parameters{14,"Options_value"})';
 Options.processing_time.convert2sparse_tensor.process.all = tic;
 %%
@@ -16,27 +16,11 @@ for k = sample_vec
     Rt2{k} = Rt2{k}-Rt2{k}(1);
 
     %Find modulateoions and 2D Rts
-    [mod{k},uRt{k}] = FoldChrom(round(Rt2{k},2),Options.modTime,trace_aug{k});
+    [mod{k},uRt{k}] = FoldChrom(Rt2{k},Options.modTime,trace_aug{k});
 end 
 
-for k = sample_vec
-                fprintf(1,'Organize to sparse tensor sample: %i/%i\n',k,length(sample_vec))
-    % k = 3
-    [r, c, val] = find(MSroi_aug{k}(:,Options.firstRt(k):end));  % find nonzero entries
-    [~,~,u_ind] = unique(c);
-    % Map column indices to mod and RT coordinates
-    modCoord = mod{k}(c);   % mod{k} is length numRt
-    rtCoord = uRt{k}(c);   % uRt{k} is length numRt
+[Options.coords.X,Options.coords.Y] = meshgrid([1:max(cellfun(@max,mod(:)))].*Options.modTime/60 +  median(cellfun(@(x)x(1),Rt_aug))/60,[1:max(cellfun(@max,uRt(:)))].*median(diff(Rt_aug{k})));
 
-    % Use row index as 3rd mode (ion slice)
-    ionSlice = r;
-
-    % Build sparse 3-way tensor
-    Z{k} = sptensor([modCoord, rtCoord, ionSlice], val,[ max(cellfun(@max,mod(:))), max(cellfun(@max,uRt(:))),length(mzroi_aug)]);
-end
-
-
-[Options.coords.X,Options.coords.Y] = meshgrid([1:max(cellfun(@max,mod(:)))].*Options.modTime/60,[1:max(cellfun(@max,uRt(:)))].*median(diff(Rt_aug{k})));
 
 %% save BPC and TIC 
 if exist(fullfile(Options.Paths.save2mat,'BPC'),'dir')  ~= 7
@@ -47,6 +31,7 @@ mkdir(fullfile(Options.Paths.save2mat,'TIC'))
 end
 
 for k = sample_vec
+      fprintf(1,'Plotting TIC and BPC, sample: %i/%i\n',k,length(sample_vec))
     % BPC
     [r, c, val] = find(MSroi_aug{k}(:,Options.firstRt(k):end));  % find nonzero entries
      % Map column indices to mod and RT coordinates
@@ -69,9 +54,33 @@ for k = sample_vec
     title(['TIC: ', fileList(k).name(1:end-4) ],'Interpreter', 'none')
     axis tight
     colorbar
-    saveas(p,fullfile(Options.Paths.save2mat,'TIC',[fileList(k).name(1:end-4),'.tif' ...
-        ]))
+    saveas(p,fullfile(Options.Paths.save2mat,'TIC',[fileList(k).name(1:end-4),'.tif']))
 end 
+clear val
+clear u_ind
+clear trace_aug
+clear r
+%% 
+
+
+for k = sample_vec
+                fprintf(1,'Organize to sparse tensor sample: %i/%i\n',k,length(sample_vec))
+    % k = 3
+    [r, c, val] = find(MSroi_aug{k}(:,Options.firstRt(k):end));  % find nonzero entries
+    [~,~,u_ind] = unique(c);
+    MSroi_aug{k} = [];
+    % Map column indices to mod and RT coordinates
+    modCoord = mod{k}(c);   % mod{k} is length numRt
+    rtCoord = uRt{k}(c);   % uRt{k} is length numRt
+
+    % Use row index as 3rd mode (ion slice)
+    ionSlice = r;
+
+    % Build sparse 3-way tensor
+    Z{k} = sptensor([modCoord, rtCoord, ionSlice], val,[ max(cellfun(@max,mod(:))), max(cellfun(@max,uRt(:))),length(mzroi_aug)]);
+
+end
+
 
 %%
 Options.processing_time.convert2sparse_tensor.save = tic;
@@ -89,5 +98,6 @@ end
 
 Options.processing_time.convert2sparse_tensor.save = toc(Options.processing_time.convert2sparse_tensor.save);
 clear MSroi_aug
+clear Z_all
 Options.processing_time.convert2sparse_tensor.process.all = ...
     toc(Options.processing_time.convert2sparse_tensor.process.all);

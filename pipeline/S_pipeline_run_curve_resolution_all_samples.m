@@ -68,7 +68,7 @@ groups = unique(feature_table(:,2));
 [mz_ind, peak_borders, Rt_cluster] = deal(cell(numel(groups),1));
 fprintf('Checking components for overlap...\n');
 
-num_clusters = numel(mz_range);
+num_clusters = numel(groups);
 q = progressParfor(num_clusters);
 [x_range,y_range,mz_range] = deal(cell(num_clusters, 1));
 parfor n_cluster = 1:num_clusters
@@ -168,10 +168,12 @@ fprintf(1,'Save results\n');
 save_MF_results_parts(clusters_all_samples,feature_groups_all, fullfile(Options.Paths.save2mat,'NMF_final'),'NMF_final_part',10)
 
 % timestamp = datestr(now,'yymmdd_HHMMSS');
- % save(fullfile(Options.dir.results, ...
- %    'curve_resolution_final.mat'),...
- %     "clusters_all_samples","clusters_all_samples_before_duplicate_removal", "feature_groups_all","feature_table","-v7.3","-nocompression");
-
+ save(fullfile(Options.Paths.save2mat, ...
+    'clusters_all_samples_before_duplicate_removal.mat'),...
+     "clusters_all_samples_before_duplicate_removal","-v7.3","-nocompression");
+ % save(fullfile(Options.Paths.save2mat, ...
+ %    'feature_table.mat'),...
+ %    "feature_table","-v7.3","-nocompression");
 % Clear temporary variables and finalize the process
 fprintf('Process completed successfully.\n');
 Options.processing_time.curve_resolution.save_final = toc(Options.processing_time.curve_resolution.save_final);

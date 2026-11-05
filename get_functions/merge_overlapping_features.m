@@ -94,8 +94,7 @@ for g = 1:nGroups
     ];
 
     merged_borders{g} = {
-        border_1
-        border_2
+        border_1, border_2
     };
 
     % ---------------------------------------------------------
@@ -130,8 +129,7 @@ for g = 1:nGroups
     profile_2(range_2) = sum(Z,1).';
 
     sum_elution_profile_tmp{g} = {
-        profile_1
-        profile_2
+        profile_1, profile_2
     };
 
     % ---------------------------------------------------------

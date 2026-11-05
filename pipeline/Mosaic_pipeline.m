@@ -1,5 +1,5 @@
 % All pipeline
-meta_data_path = "N:\SCIENCE-PLEN-ECP_AnalytChem\People\Nadine\publication\meta_data.xlsx";
+meta_data_path = "N:\SCIENCE-PLEN-ECP_AnalytChem\Projects\MST\mosaic\260922_test_1\260922_meta_data.xlsx";
 % meta_data_path = "F:\Nadine\meta_data"%thresh_morethan1mz.xlsx"
 %% Get all paths
 fprintf(1,'Setup Mosaic\n');
@@ -17,8 +17,14 @@ addpath(input_parameters{6,"Paths_dir"}{:})
 fprintf(1,'ROI detection\n');
 cd([Options.Paths.CDF])
 fileList                                          = dir(['*',Options.ROI.MS1_Suffix]);
-S_Import_template_ROI
 
+cd C:\Users\mht541\Documents\MATLAB
+delete(gcp('nocreate'))
+parpool(6)
+S_Import_template_ROI
+cd C:\Users\mht541\Documents\MATLAB
+delete(gcp('nocreate'))
+parpool(20)
 %% Fold to tensor
 fprintf(1,'Convert to sparse tensor\n');
 S_Convert2spTensor

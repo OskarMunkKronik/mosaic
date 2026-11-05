@@ -32,13 +32,13 @@ function [locs_x, locs_y, peak_borders,sum_elution_profile,Z_feature] = get_rt_s
     peak_borders = cell(1,2);
     for dim = 1:2
         ApexTime = rt(dim);
-        [peak_borders{dim}, ~,rt(dim)] = PeakBorder_Width(rt_window{dim}, ...
+        [peak_borders{1,dim}, ~,rt(dim)] = PeakBorder_Width(rt_window{dim}, ...
                                                   sum_elution_profile{dim}(:), ...
                                                   100, ApexTime);
     end
     locs_x = rt(1);
     locs_y = rt(2);
-    Z_feature = data(peak_borders{1}(1):peak_borders{1}(2),peak_borders{2}(1):peak_borders{2}(2));
+    Z_feature = data(peak_borders{1,1}(1):peak_borders{1,1}(2),peak_borders{1,2}(1):peak_borders{1,2}(2));
       % Summed elution profiles across each dimension
     sum_elution_profile{1} = sum(Z_feature, 2); % along rows
     sum_elution_profile{2} = sum(Z_feature, 1); % along cols

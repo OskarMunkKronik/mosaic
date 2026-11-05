@@ -5,7 +5,7 @@ function volume = plot_volume_elu_ms_component( ...
     mzroi_aug, load_dir, n_samples, ...
     sample_names, compound_name)
 
-clf
+% clf
 
 %% ================== GROUPING ==================
 [clusters_unique,~,group_idx] = unique(clusters);
@@ -25,6 +25,9 @@ Rt_tmp = [ ...
 Rt_tmp = round(Rt_tmp);
 
 colors = rand(max(group_idx),3);
+if max(group_idx) == 1
+    colors = [0 0 1];
+end 
 
 %% ================== BAR PLOT ==================
 subplot(1,2,1); hold on

@@ -12,7 +12,7 @@ mass_spectra_cell = cellfun(@(spec,idx) spec(idx), ...
 
 len_spectra = cellfun(@numel, mz_in_mass_spectra);
 
-save(fullfile(Options.Paths.save2mat,'mass_spectra.mat'),"len_spectra","mass_spectra_cell","mz_in_mass_spectra")
+% save(fullfile(Options.Paths.save2mat,'mass_spectra.mat'),"len_spectra","mass_spectra_cell","mz_in_mass_spectra")
 
 %% Save MSP file 
-saveMSP(fullfile(Options.Paths.save2mat,"mass_spectra.msp"), feature_groups_all, mzroi_aug, feature_table,3,Options)
+saveMSP(fullfile(Options.Paths.save2mat,"mass_spectra_test.msp"), feature_groups_all, mzroi_aug, feature_table,3,Options)

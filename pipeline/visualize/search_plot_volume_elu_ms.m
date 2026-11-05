@@ -19,11 +19,16 @@ for i = 1:nFeatures
     mz_spec = mz_in_mass_spectra{i};
 
     for j = 1:nTargets
+        if Options.ROI.ppm
         ppm_error = abs(mz_spec - mzTarget(j,:)) ./ mzTarget(j,:) * 1e6;
-        matches(i,j) = any(sum(ppm_error < ppm_dev,2) > 0);
+        else 
+        ppm_error = abs(mz_spec - mzTarget(j,:));   
+        end
+        % matches(i,j) = any(sum(ppm_error < ppm_dev,1) > 0);
+         matches(i,j) = all(sum(ppm_error < ppm_dev,1));
+    
     end
-end
-
+end 
 % disp(sum(matches))
 
 %% ================== RT OFFSET ==================

@@ -1,17 +1,18 @@
 %% ================== SETUP ==================
-Options.Paths.save2mat = 'D:\people\mht541\rawData\nadine';
+Options.Paths.save2mat = 'D:\people\mht541\rawData\MST\Batch_2_influent\test_nominal_mass';
 dataDir = Options.Paths.save2mat;
-load(fullfile(dataDir,'curve_resolution_final_meta_data_Ver2.mat'),'Options', 'mz_range','matFile_list')
-% load(fullfile(dataDir,'feature_table_before_duplicate_remove.mat'))
-load(fullfile(dataDir,'curve_resolution_final.mat'),'clusters_all_samples_before_duplicate_removal','feature_table')
+load(fullfile(dataDir,'clusters_all_samples_before_duplicate_removal.mat'),'clusters_all_samples_before_duplicate_removal')
+% load(fullfile(dataDir,'curve_resolution_final_meta_data_Ver2.mat'),'feature_table')
 load(fullfile(dataDir,'ROI\Samples_aug\MSroi_aug.mat'),"Rt_aug")
 load(fullfile(dataDir,'ROI\Samples_aug\mzroi_aug.mat'))
+load(fullfile(dataDir,'curve_resolution_final_meta_data_Ver2.mat'),'Options', 'mz_range','matFile_list')
 % load(fullfile(dataDir,"ROI\fileList_Samples.mat"))
 % load(fullfile(Options.Paths.save2mat,'curve_resolution_final_meta_data_Ver2.mat'))
 [clusters_all_samples, feature_groups_all] = load_MF_results_parts( fullfile(dataDir,'NMF_final'),'NMF_final_part_');
 
 % load(fullfile(Options.Paths.save2mat,'mass_spectra.mat'))
 load_dir = fullfile(dataDir,'component_cluster');
+feature_table = full([feature_groups_all.basePeak; clusters_all_samples'; feature_groups_all.Rt;feature_groups_all.sample;feature_groups_all.volume_summed]');
 
 n_samples = max(feature_table(:,5));
 num_clusters_before_curve_resolution = length(mz_range);
@@ -34,38 +35,34 @@ mass_spectra_cell = cellfun(@(spec,idx) spec(idx), ...
 len_spectra = cellfun(@numel, mz_in_mass_spectra);
 
 %% ================== TARGETS ==================
-ppm_dev = 100; % Set the ppm deviation to a user defined value corresponding to the mass accuracy of your mass spectrometer
-sample_names = {matFile_list.name}';
-rt_offset = round(median(cellfun(@(rt) rt(1),Rt_aug))/60,3);
-
-%% ================== Search ==================
-
-compound_name = {'non'}; % Fill in for plotting 
-% Plot components with mzTarget in their Mass spectrum
-mzTarget = 95.0105
-
-
-
-
-
-
-; % Target m/z to search mass spectra for 
-figure(1)
-%figure
-Options.Paths.save2mat = dataDir;
-search_plot_volume_elu_ms( ...
-    num_clusters_before_curve_resolution, mz_in_mass_spectra, mzTarget, ppm_dev, ...
-    feature_table, rt_offset, Options, ...
-    clusters_all_samples_before_duplicate_removal, ...
-    mzroi_aug, load_dir, n_samples, ...
-    sample_names, compound_name);
+    ppm_dev = 500; % Set the ppm deviation to a user defined value corresponding to the mass accuracy of your mass spectrometer
+    sample_names = {matFile_list.name}';
+    rt_offset = round(median(cellfun(@(rt) rt(1),Rt_aug))/60,3);
+    
+    %% ================== Search ==================
+    
+    compound_name = {'non'}; % Fill in for plotting 
+    % Plot components with mzTarget in their Mass spectrum
+    % Paracetamol, 2TMS mzTarget = 	[223.118,208.066,181.114,166.107]; % Target m/z to search mass spectra for 
+    %Salicylic Adic, 2TMS 
+   
+    mzTarget=[267.085,209.074,135.091]
+    figure(1)
+    %figure
+    Options.Paths.save2mat = dataDir;
+    search_plot_volume_elu_ms( ...
+        num_clusters_before_curve_resolution, mz_in_mass_spectra, mzTarget, ppm_dev, ...
+        feature_table, rt_offset, Options, ...
+        clusters_all_samples_before_duplicate_removal, ...
+        mzroi_aug, load_dir, n_samples, ... 
+        sample_names, compound_name);
 
 %% Plot specific components
 figure(3)
 42
-componentTarget = 10496
+componentTarget = [6644]
 
-
+% for n = 1:length(componentTarget)
 % The specific component desired to be plotted
 volume = plot_volume_elu_ms_component( ...
     num_clusters_before_curve_resolution,componentTarget, ...                         % <-- directly provided
@@ -73,3 +70,5 @@ volume = plot_volume_elu_ms_component( ...
     clusters_all_samples_before_duplicate_removal, ...
     mzroi_aug, load_dir, n_samples, ...
     sample_names, compound_name);
+hold on
+% end 
