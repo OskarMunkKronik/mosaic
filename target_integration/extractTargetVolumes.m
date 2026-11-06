@@ -113,7 +113,7 @@ for k = kList
             surf(ax, rt1w, rt2w, Zs.', 'FaceColor', 'interp', 'EdgeColor', 'none');
             view(ax, [0 90]); axis(ax, 'tight'); hold(ax, 'on');
             if pk > 0
-                scatter3(ax, apex(j,1), apex(j,2), pk, 'red', 'filled');
+                scatter3(ax, rt_expected(j,1), rt_expected(j,2), pk, 'red', 'filled');
             end
             xlabel(ax, '^1t_R (min)'); ylabel(ax, '^2t_R (s)');
             title(ax, compound_name(j), 'Interpreter', 'none');

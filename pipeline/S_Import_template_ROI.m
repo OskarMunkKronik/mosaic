@@ -68,6 +68,7 @@ NbrePts          = length(fileList)*Options.ROI.NumTrace;
 Msg = ['Sample ',num2str(1),' - ROI Progress...!'];
 % Create ParFor Waitbar
 [hWaitbar,hWaitbarMsgQueue]= ParForWaitbarCreateMH(Msg,NbrePts);
+q = progressParfor(NbrePts);
 
 Options.ROI
 
@@ -76,63 +77,50 @@ fileList_MS2 = dir([[Options.Paths.CDF_MS2,'\*',Options.ROI.MS2_Suffix]]);
 if exist(fullfile(Options.Paths.save2mat,'ROI','Samples'),'dir') ~= 7
     mkdir(fullfile(Options.Paths.save2mat,'ROI','Samples'))
 end 
+% send(q, k);
+
 for T = 1:Options.ROI.NumTrace
     fprintf(1,'Trace: %i/%i\n',T,Options.ROI.NumTrace)
 
     parfor k = 1:length(fileList)
-        fprintf(1,'Sample: %i/%i\n',k,length(fileList))
-%         if T == 1
-%             cd(Options.Paths.CDF)
-%             FileName = fileList(k).name;
-%         else 
-%             cd(Options.Paths.CDF_MS2)
-%             FileName = fileList_MS2(contains({fileList_MS2.name},fileList(k).name(1:end-Options.ROI.RemoveSuffix))).name;
-%         end 
-%         hWaitbarMsgQueue.send(0);              
-%         % ROI
-% %         [mzroi{k,T},MSroi{k,T},~,     ~,      ~,     Rt{k,T},Dt{k,T},trace{k,T}] = ROIpeaks_ACN(FileName,Options.ROI);
-%         [mzroi,MSroi,~,     ~,      ~,     Rt,~,trace] = ROIpeaks_ACN(FileName,Options.ROI);
-%         save(fullfile(Options.Paths.save2mat,'ROI','Samples', [fileList(k).name(1:end-4),'_MSroi.mat']),'mzroi','MSroi',"Rt","trace","Options")
-    processROI(k, T, fileList, fileList_MS2, Options, hWaitbarMsgQueue)
+        send(q, k);
+      processROI(k, T, fileList, fileList_MS2, Options, hWaitbarMsgQueue)
     end
 
 end
-%Save to mat
-% save([Options.Paths.save2mat,'mzroi.mat'],'mzroi',"Options")
-% save([Options.Paths.save2mat,'MSroi.mat'],'mzroi','MSroi',"Rt","Options")
-
-% delete(gcp('nocreate'))
 Options.processing_time.ROI.process.sample_wise = toc(Options.processing_time.ROI.process.sample_wise);
 %% Augment
 Options.processing_time.ROI.process.augmentation = tic;
 %Load RoIs for augmentations
-[mzroi_aug,MSroi_aug,Rt_aug,~,trace_aug] = deal(cell(length(fileList),Options.ROI.NumTrace));
+[mzroi_aug,Rt_aug,~,trace_aug] = deal(cell(length(fileList),Options.ROI.NumTrace));
 fileList_mat = dir([Options.Paths.save2mat,'/ROI/Samples/*.mat']);
 for k = 1:length(fileList)
     fprintf(1,'Load sample data for augmentation: %i/%i\n',k,length(fileList))
     ind = contains({fileList_mat.name},fileList(k).name(1:end-4));  
-    d = load(fullfile(Options.Paths.save2mat,'ROI','Samples',fileList_mat(ind).name));
+    d = load(fullfile(Options.Paths.save2mat,'ROI','Samples',fileList_mat(ind).name),'mzroi','Rt','trace');
     % Options.Paths.save2mat = 'C:\Users\mht541\Documents\Python_Scripts\2DLC_workflow\matlab\DataFiles';
     mzroi_aug{k} = d.mzroi;
-    MSroi_aug{k} = d.MSroi;
+    % MSroi_aug{k} = d.MSroi;
     Rt_aug{k} = d.Rt;
     trace_aug{k} = d.trace;
 end
-
+Options.ROI.RtInt = cellfun(@length,Rt_aug);
 % Augmenting 
-[mzroi_aug,MSroi_aug]=MSroiaug_ACN2(mzroi_aug,MSroi_aug,Options.ROI);
+Options.ROI.fileList = fileList_mat;
+Options.ROI.Paths.save2mat = Options.Paths.save2mat;
+[mzroi_aug]=MSroiaug_ACN2(mzroi_aug,[],Options.ROI);
 
 Options.processing_time.ROI.process.augmentation = toc(Options.processing_time.ROI.process.augmentation);
 
 %%
 Options.processing_time.ROI.save = tic; 
 %Save to mat
-if exist([Options.Paths.save2mat,'/ROI/Samples_aug'],'dir')  ~= 7
-    mkdir([Options.Paths.save2mat,'/ROI/Samples_aug'])
+if exist([Options.Paths.save2mat,'/ROI/Augmented'],'dir')  ~= 7
+    mkdir([Options.Paths.save2mat,'/ROI/Augmented'])
 end
-save([Options.Paths.save2mat,'/ROI/Samples_aug/mzroi_aug.mat'],'mzroi_aug',"Options")
-save([Options.Paths.save2mat, '/ROI/Samples_aug/MSroi_aug.mat'], ...
-     'mzroi_aug', 'MSroi_aug', 'Rt_aug', 'trace_aug', ...
+% save([Options.Paths.save2mat,'/ROI/Samples_aug/mzroi_aug.mat'],'mzroi_aug',"Options")
+save([Options.Paths.save2mat, '/ROI/Augmented/mzroi_aug.mat'], ...
+     'mzroi_aug', 'Rt_aug', 'trace_aug', ...
      'Options', 'fileList_mat', 'fileList', '-v7.3');
 
 Options.processing_time.ROI.save = toc(Options.processing_time.ROI.save);

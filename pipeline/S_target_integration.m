@@ -41,4 +41,4 @@ tol = input_data{:,"mzTol"};
         mzTarget, tol, rt_expected, rt_tol, compound_name,kList);
 
 %% Reprocessing volumes if rt borders need to change depending on co-elution. 
-volume_manual = reprocessVolumesFromExcel(Options, matFile_list, tol, kList);
+volume_manual = reprocessVolumesFromExcel(Options, matFile_list, tol, 5);
