@@ -1,4 +1,4 @@
-data_dir = [Options.Paths.save2mat,'/ROI/Samples_aug'];
+data_dir = [Options.Paths.save2mat,'/ROI/Augmented'];
 % load(fullfile(data_dir,'MSroi_aug.mat'),'MSroi_aug')
 load(fullfile(data_dir,'mzroi_aug.mat'),'mzroi_aug','Rt_aug','trace_aug')
 mz_candidate = find(mzroi_aug >= input_parameters{13,"Options_value"} & mzroi_aug <= input_parameters{14,"Options_value"})';
