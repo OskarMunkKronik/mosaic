@@ -1,14 +1,14 @@
-function [volume_manual, apexTables] = extractTargetVolumes(Options, matFile_list, ...
+function [volume_manual, apexTables] = extractTargetVolumes(Options, fileList, ...
         mzTarget, tol, rt_expected, rt_tol, compound_name, kList, opts)
 %EXTRACTTARGETVOLUMES  Integrate target compounds in GCxGC sparse tensors,
 %   plot them, and export apex / integration borders per sample to Excel.
 %
-%   [volume_manual, apexTables] = extractTargetVolumes(Options, matFile_list, ...
+%   [volume_manual, apexTables] = extractTargetVolumes(Options, fileList, ...
 %        mzTarget, tol, rt_expected, rt_tol, compound_name, kList)
 %
 %   Inputs
 %     Options        struct with Options.Paths.save2mat
-%     matFile_list   dir() struct of the sample files
+%     fileList   dir() struct of the sample files
 %     mzTarget       [nTargets x 1] target m/z
 %     tol            m/z tolerance
 %     rt_expected    [nTargets x 2] expected [1tR (min), 2tR (s)]
@@ -31,13 +31,13 @@ function [volume_manual, apexTables] = extractTargetVolumes(Options, matFile_lis
 
 arguments
     Options (1,1) struct
-    matFile_list
+    fileList
     mzTarget (:,1) double
     tol (:,1) double
     rt_expected (:,2) double
     rt_tol (:,2) double
     compound_name
-    kList (1,:) double = 1:numel(matFile_list)
+    kList (1,:) double = 1:numel(fileList)
     opts.MakePlots (1,1) logical = true
     opts.SaveFig (1,1) logical = false
     opts.VolumeManual double = []
@@ -46,9 +46,9 @@ end
 nTargets = numel(mzTarget);
 volume_manual = opts.VolumeManual;
 if isempty(volume_manual)
-    volume_manual = nan(nTargets, numel(matFile_list));
+    volume_manual = nan(nTargets, numel(fileList));
 end
-apexTables = cell(numel(matFile_list), 1);
+apexTables = cell(numel(fileList), 1);
 allT = {};
 root    = fullfile(Options.Paths.save2mat, 'target_compounds');
 dirChrom = fullfile(root, 'chromatograms');
@@ -63,7 +63,7 @@ nc = ceil(nTargets / nr);
 
 for k = kList
     matPath = fullfile(Options.Paths.save2mat, 'SparseTensor', ...
-        [matFile_list(k).name(1:end-4), '.mat']);
+        [fileList(k).name, '.mat']);
     % Only load what is needed (uRt, mod, fileList were never used)
     d = load(matPath, 'Z', 'mzroi_aug', 'Options');
 
@@ -78,10 +78,10 @@ for k = kList
     if opts.MakePlots
         fig = figure('Visible', 'off', 'Units', 'normalized', 'Position', [0 0 1 1]);
         tl  = tiledlayout(fig, nr, nc, 'TileSpacing', 'compact', 'Padding', 'compact');
-        title(tl, matFile_list(k).name(1:end-4), 'Interpreter', 'none');
+        title(tl, fileList(k).name(1:end-4), 'Interpreter', 'none');
     end
 
-    for j = 1:nTargets
+    parfor j = 1:nTargets
         % find() gives integer index vectors -> cheaper, contiguous slicing
         i1 = find(abs(rt_1 - rt_expected(j,1)) <= rt_tol(j,1));
         i2 = find(abs(rt_2 - rt_expected(j,2)) <= rt_tol(j,2));
@@ -126,24 +126,24 @@ for k = kList
         'VariableNames', {'Compound','mzTarget','RT1_apex','RT2_apex', ...
         'RT1_min','RT1_max','RT2_min','RT2_max','Volume'});
     apexTables{k} = T;
-    allT{end+1} = addvars(T, repmat(string(matFile_list(k).name), nTargets, 1), ...
+    allT{end+1} = addvars(T, repmat(string(fileList(k).name), nTargets, 1), ...
         'Before', 1, 'NewVariableNames', 'Sample'); %#ok<AGROW>
-    xlsPath = fullfile(dirXls, [matFile_list(k).name, '.xlsx']);
+    xlsPath = fullfile(dirXls, [fileList(k).name, '.xlsx']);
     if exist(xlsPath, 'file'), delete(xlsPath); end
     writetable(T, xlsPath, 'Sheet', 'targets');
 
     % ---- Figures ------------------------------------------------------
     if opts.MakePlots
-        exportgraphics(fig, fullfile(dirChrom, [matFile_list(k).name, '.tiff']), 'Resolution', 150);
+        exportgraphics(fig, fullfile(dirChrom, [fileList(k).name, '.tiff']), 'Resolution', 150);
         if opts.SaveFig
-            savefig(fig, fullfile(dirChrom, [matFile_list(k).name, '.fig']));
+            savefig(fig, fullfile(dirChrom, [fileList(k).name, '.fig']));
         end
         close(fig);
     end
 end
 
 % Combined workbook for all samples in kList
-writeSummary(allT, volume_manual, kList, {matFile_list.name}, ...
+writeSummary(allT, volume_manual, kList, {fileList.name}, ...
     fullfile(root, 'all_samples_rt_borders.xlsx'));
 end
 

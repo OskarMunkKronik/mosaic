@@ -33,12 +33,13 @@ S_Convert2spTensor
 
 %% Integration
 rt_expected = input_data{:,["x1stDimensionTime_min_","x2ndDimensionTime_s_"]};
-x = input_data{:,["x1stDimensionR_T_Deviation_s_","x2ndDimensionR_T_Deviation_s_"]}./[60,1];
+rt_tol = input_data{:,["x1stDimensionR_T_Deviation_s_","x2ndDimensionR_T_Deviation_s_"]}./[60,1];
 mzTarget = input_data{:,"mzTarget"};
 tol = input_data{:,"mzTol"}; 
+compound_name = input_data{:,"Name"};
 
-[volume_manual, apexTables] = extractTargetVolumes(Options, matFile_list, ...
-        mzTarget, tol, rt_expected, rt_tol, compound_name,kList);
+[volume_manual, apexTables] = extractTargetVolumes(Options, fileList, ...
+        mzTarget, tol, rt_expected, rt_tol, compound_name,1:length(fileList));
 
 %% Reprocessing volumes if rt borders need to change depending on co-elution. 
 volume_manual = reprocessVolumesFromExcel(Options, matFile_list, tol, 5);
