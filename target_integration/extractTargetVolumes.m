@@ -81,7 +81,7 @@ for k = kList
         title(tl, fileList(k).name(1:end-4), 'Interpreter', 'none');
     end
 
-    parfor j = 1:nTargets
+    for j = 1:nTargets
         % find() gives integer index vectors -> cheaper, contiguous slicing
         i1 = find(abs(rt_1 - rt_expected(j,1)) <= rt_tol(j,1));
         i2 = find(abs(rt_2 - rt_expected(j,2)) <= rt_tol(j,2));
