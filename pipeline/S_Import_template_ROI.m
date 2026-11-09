@@ -82,7 +82,7 @@ end
 for T = 1:Options.ROI.NumTrace
     fprintf(1,'Trace: %i/%i\n',T,Options.ROI.NumTrace)
 
-    parfor k = 1:length(fileList)
+    for k = 1:length(fileList)
         send(q, k);
       processROI(k, T, fileList, fileList_MS2, Options, hWaitbarMsgQueue)
     end
