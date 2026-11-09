@@ -1,9 +1,9 @@
 % All pipeline
-meta_data_path = "N:\SCIENCE-PLEN-ECP_AnalytChem\Projects\MST\mosaic\260922_test_1\260922_meta_data.xlsx";
+meta_data_path = "C:\Users\mht541\Desktop\test_mosaic\pipeline\meta_data";
 % meta_data_path = "F:\Nadine\meta_data"%thresh_morethan1mz.xlsx"
 %% Get all paths
 fprintf(1,'Setup Mosaic\n');
-cd D:\people\mht541\projects\mosaic\mosaic_published
+cd C:\Users\mht541\Desktop\test_mosaic\
 ProjectPBA
 
 %% run options file
@@ -20,11 +20,11 @@ fileList                                          = dir(['*',Options.ROI.MS1_Suf
 
 cd C:\Users\mht541\Documents\MATLAB
 delete(gcp('nocreate'))
-parpool(6)
+% parpool(6)
 S_Import_template_ROI
 cd C:\Users\mht541\Documents\MATLAB
 delete(gcp('nocreate'))
-parpool(20)
+% parpool(20)
 %% Fold to tensor
 fprintf(1,'Convert to sparse tensor\n');
 S_Convert2spTensor

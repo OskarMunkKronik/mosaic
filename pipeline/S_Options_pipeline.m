@@ -53,6 +53,10 @@ algorithm = {'als','mult'};
 Options.curve_resolution.algorithm  = algorithm{input_parameters{1,"curve_resolutions_value"}};
 Options.curve_resolution.max_factor = input_parameters{2,"curve_resolutions_value"};
 Options.curve_resolution.exp_var_thresh = input_parameters{3,"curve_resolutions_value"};
+Options.curve_resolution.Saturation = input_parameters{4,"curve_resolutions_value"} == 1;
+Options.curve_resolution.Saturation_thresh = input_parameters{5,"curve_resolutions_value"};
+
+
 %% Load Rt
 % rt = load('C:\Users\mht541\Documents\Python_Scripts\2DLC_workflow\matlab\DataFiles\NTS_feature_detections\Rts_2D.mat');
 
